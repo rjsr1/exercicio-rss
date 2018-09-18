@@ -29,7 +29,5 @@ class RSSAdapter (private val listRSS:List<ItemRSS>,private val context:Context)
         val tv_item_titulo=itemView.item_titulo
         val tv_item_data=itemView.item_data
 
-
-
     }
 }

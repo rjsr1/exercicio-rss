@@ -28,6 +28,7 @@ class MainActivity : Activity() {
         val viewManager = LinearLayoutManager(this)
         conteudoRSS=findViewById(R.id.conteudoRSS) as RecyclerView
         try{
+            //chama metodo atraves de doAsync e atualiza o adapter da recyclerView na thread principal
             doAsync {
                 val feedXML:String = getFeedXML(RSS_FEED)
                 val listaItems=ParserRSS.parse(feedXML)
@@ -46,23 +47,6 @@ class MainActivity : Activity() {
 
     }
 
-    override fun onStart() {
-        super.onStart()
-
-      /*  try{
-            doAsync {
-                val feedXML:String = getFeedXML(RSS_FEED)
-                val listaItems=ParserRSS.parse(feedXML)
-                uiThread {
-                    conteudoRSS?.adapter = RSSAdapter(listaItems,this@MainActivity)
-                }
-
-            }
-    }catch (e:Exception){
-            e.printStackTrace()
-        }
-*/
-    }
 
     private fun getFeedXML(rsS_FEED: String): String {
         var input: InputStream? = null
@@ -75,10 +59,9 @@ class MainActivity : Activity() {
             val buffer = ByteArray(1024)
             var count: Int
             count = input!!.read(buffer)
-            var countAnt:Int=0
             while (count  != -1) {
                 out.write(buffer, 0, count)
-                count = input!!.read(buffer)
+                count = input.read(buffer)//adicionado no porting do codigo para evitar looping infinito
             }
             rssFeed = String(out.toByteArray(),Charsets.UTF_8 )
         } finally {
