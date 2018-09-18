@@ -2,11 +2,88 @@ package br.ufpe.cin.if710.rss
 
 import android.app.Activity
 import android.os.Bundle
+import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
+import android.widget.ListView
+import android.widget.TextView
+import org.jetbrains.anko.doAsync
+import org.jetbrains.anko.uiThread
+import java.io.ByteArrayOutputStream
+import java.io.IOException
+import java.io.InputStream
+import java.net.HttpURLConnection
+import java.net.URL
+import java.nio.charset.Charset
+import kotlin.text.Charsets.UTF_8
 
 class MainActivity : Activity() {
 
+    private var RSS_FEED:String ="http://leopoldomt.com/if1001/g1brasil.xml"
+    private  var conteudoRSS :RecyclerView ? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        System.gc()
         setContentView(R.layout.activity_main)
+        val viewManager = LinearLayoutManager(this)
+        conteudoRSS=findViewById(R.id.conteudoRSS) as RecyclerView
+        try{
+            doAsync {
+                val feedXML:String = getFeedXML(RSS_FEED)
+                val listaItems=ParserRSS.parse(feedXML)
+                uiThread {
+                    conteudoRSS?.adapter = RSSAdapter(listaItems,this@MainActivity)
+                }
+
+            }
+        }catch (e:Exception){
+            e.printStackTrace()
+        }
+        conteudoRSS?.apply {
+            layoutManager = viewManager
+            setHasFixedSize(true)
+        }
+
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+      /*  try{
+            doAsync {
+                val feedXML:String = getFeedXML(RSS_FEED)
+                val listaItems=ParserRSS.parse(feedXML)
+                uiThread {
+                    conteudoRSS?.adapter = RSSAdapter(listaItems,this@MainActivity)
+                }
+
+            }
+    }catch (e:Exception){
+            e.printStackTrace()
+        }
+*/
+    }
+
+    private fun getFeedXML(rsS_FEED: String): String {
+        var input: InputStream? = null
+        var rssFeed = ""
+        try {
+            val url = URL(rsS_FEED)
+            val conn = url.openConnection() as HttpURLConnection
+            input = conn.inputStream
+            val out = ByteArrayOutputStream()
+            val buffer = ByteArray(1024)
+            var count: Int
+            count = input!!.read(buffer)
+            var countAnt:Int=0
+            while (count  != -1) {
+                out.write(buffer, 0, count)
+                count = input!!.read(buffer)
+            }
+            rssFeed = String(out.toByteArray(),Charsets.UTF_8 )
+        } finally {
+            input?.close()
+        }
+        return rssFeed
     }
 }
